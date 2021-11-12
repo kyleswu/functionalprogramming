@@ -1,0 +1,16 @@
+(library
+  (name lib)
+  (modules lib)
+  (libraries 
+    core
+    yojson
+    ppx_deriving_yojson.runtime)
+  (preprocess (pps bisect_ppx ppx_jane ppx_deriving_yojson)))
+
+(executable
+  (name ngrams)
+  (modules ngrams)
+  (libraries
+    lib
+    core)
+  (preprocess (pps ppx_jane)))

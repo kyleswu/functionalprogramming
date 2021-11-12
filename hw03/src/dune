@@ -1,0 +1,8 @@
+(library
+  (name abstraction)
+  (modules
+    abstraction)
+  (libraries
+    core)
+  (preprocess (pps bisect_ppx))
+  )

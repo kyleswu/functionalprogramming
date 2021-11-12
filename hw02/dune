@@ -1,0 +1,11 @@
+(rule
+  (target assignment2.zip)
+  (deps 
+    src/treedict.ml
+    src/histo.ml
+    src/dune
+    tests/tests.ml
+    tests/dune
+  )
+  (action
+    (run zip -R assignment2.zip %{deps})))

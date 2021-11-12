@@ -1,0 +1,16 @@
+(library
+  (name treedict)
+  (modules
+    treedict)
+  (libraries
+    core))
+
+(executable
+  (name histo)
+  (modules
+    histo)
+  (libraries
+    core
+    stdio
+    treedict)
+  (preprocess (pps ppx_deriving_yojson)))
