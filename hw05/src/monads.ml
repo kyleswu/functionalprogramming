@@ -81,9 +81,11 @@ module Stack_char = struct
     (* same as above but thread through a charstack *)
 
     let bind (x : 'a t) ~(f : 'a -> 'b t) : 'b t =
-     fun (s : charstack) -> failwith "FILL IN"
+     fun (s : charstack) ->
+      let x', s' = x s in
+      (f x') s'
 
-    let return (x : 'a) : 'a t = fun (s : charstack) -> failwith "FILL IN"
+    let return (x : 'a) : 'a t = fun (s : charstack) -> (x, s)
 
     let map = `Define_using_bind
 
@@ -93,15 +95,21 @@ module Stack_char = struct
     let run (c : 'a t) : 'a = match c [] with a, s -> a
 
     (* pop should "push" the character on the charstack and return () as the value *)
-    let push (c : char) : unit t = fun (s : charstack) -> failwith "FILL IN"
+    let push (c : char) : unit t = fun (s : charstack) -> ((), c :: s)
 
     (* pop should pop off and return the top element, i.e. the list head.
        Note for now if the charstack was empty you can just `failwith "empty pop"`.
        Also get() above had a unit argument but it is not needed, the
        state monad delays execution. *)
-    let pop : char t = fun (s : charstack) -> failwith "FILL IN"
+    let pop : char t = fun (s : charstack) ->
+      match s with
+      | c :: tl -> (c, tl)
+      | [] -> failwith "empty pop"
 
-    let is_empty : bool t = fun (s : charstack) -> failwith "FILL IN"
+    let is_empty : bool t = fun (s : charstack) ->
+      match s with
+      | c :: tl -> (false, s)
+      | [] -> (true, s)
   end
 
   include T
@@ -147,9 +155,9 @@ let are_balanced_exn s =
     | ')' -> match_with stack_of_lefts '('
     | _ -> true
   in
-  try
-    let r = String.fold ~init:true ~f:(fun b c -> b && parse c) s in
-    r && Stack.is_empty stack_of_lefts
+  try (* this try block may end early when popping from an empty stack and jump to the with block *)
+    let r = String.fold ~init:true ~f:(fun b c -> b && parse c) s in (* this fold will have a runtime of kn given the string s where k is a constant defined by the many operations that can take place in parse which are all constant time *)
+    r && Stack.is_empty stack_of_lefts (* this comparison takes place in constant time *)
   with _ -> false
 
 (* Now for the exercise: redo this code turning all the "real" stack operations
@@ -160,9 +168,24 @@ let are_balanced_exn s =
    as separate functions with types declared for your benefit.  Pay close attention
    to those types, the auxiliary functions are returning monadic values. *)
 
-let parse (c : char) : bool t = failwith "FILL THIS IN"
+let parse (c : char) : bool t = (* parse will run in constant time, and depending on the case will have a different run time we will denote its run time as k a constant *)
+  match c with
+  | '(' ->
+    let%bind () = push '(' in
+    return true
+  | ')' ->
+    let%bind c = pop in
+    if Char.(c <> '(') then return false else return true
+  | _ -> return true
 
-let main_monadic (s : string) : bool t = failwith "FILL THIS IN"
+let main_monadic (s : string) : bool t =
+  let%bind r = String.fold ~init:(return true) ~f:(fun b c -> (* this fold will have a runtime of n and call parse each time *)
+    let%bind prev_bool = b in
+    let%bind cur_bool = parse c in
+    return (prev_bool && cur_bool)
+    ) s in
+  let%bind l = is_empty in (* constant time *)
+  return (r && l) (* constant time *)
 
 let are_balanced_monadic (s : string) : bool =
   try run @@ main_monadic s with _ -> false
@@ -172,8 +195,8 @@ let are_balanced_monadic (s : string) : bool =
     One problem with monad encodings is the run-time complexity can be greater.
 
     For a string s of length n, calculate the asymptotic complexity of
-      (a) are_balanced_exn s
-      (b) are_balanced_monadic s
+      (a) are_balanced_exn s = O(kn)
+      (b) are_balanced_monadic s = O(kn)
 
     respectively.  Show your work so you can get partial credit.
 
