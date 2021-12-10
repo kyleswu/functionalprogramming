@@ -156,7 +156,7 @@ let are_balanced_exn s =
     | _ -> true
   in
   try (* this try block may end early when popping from an empty stack and jump to the with block *)
-    let r = String.fold ~init:true ~f:(fun b c -> b && parse c) s in (* this fold will have a runtime of kn given the string s where k is a constant defined by the many operations that can take place in parse which are all constant time *)
+    let r = String.fold ~init:true ~f:(fun b c -> b && parse c) s in (* this fold will have a runtime of n given the string s *)
     r && Stack.is_empty stack_of_lefts (* this comparison takes place in constant time *)
   with _ -> false
 
@@ -168,7 +168,7 @@ let are_balanced_exn s =
    as separate functions with types declared for your benefit.  Pay close attention
    to those types, the auxiliary functions are returning monadic values. *)
 
-let parse (c : char) : bool t = (* parse will run in constant time, and depending on the case will have a different run time we will denote its run time as k a constant *)
+let parse (c : char) : bool t = (* parse will run in constant time *)
   match c with
   | '(' ->
     let%bind () = push '(' in
@@ -195,8 +195,8 @@ let are_balanced_monadic (s : string) : bool =
     One problem with monad encodings is the run-time complexity can be greater.
 
     For a string s of length n, calculate the asymptotic complexity of
-      (a) are_balanced_exn s = O(kn)
-      (b) are_balanced_monadic s = O(kn)
+      (a) are_balanced_exn s = O(n)
+      (b) are_balanced_monadic s = O(n)
 
     respectively.  Show your work so you can get partial credit.
 
